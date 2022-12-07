@@ -15,10 +15,11 @@ sums = file_data.map {|ele| ele.sum}
 
 # p file_data
 # p sums.count
-max = sums.max
+first = sums.delete(sums.max)
+second  = sums.delete(sums.max)
+third = sums.delete(sums.max)
 
-
-p max
+p first + second + third
 # split_data = file_data.split("\n\n")
 
 # elves = split_data.map do |elve|
