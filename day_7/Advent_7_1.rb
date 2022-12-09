@@ -12,96 +12,64 @@ end
 
 file_data = file_data[0]
 
-class DirNode
-
-    attr_reader :name, :path, :size, :parent, :total_size, :directory_nodes, :file_names, :directory_names
-
-    def initialize(name, data, depth = 0, parent = false, debug = false)
-        @name = name
-        @data = data
-        @depth = depth
-        @parent = parent
-        @debug = debug
-
-        @directory_names = []
-        @directory_nodes = {}
-        @file_names = {}
-        @size = 0
-        @total_size = 0
-
-        @path = parent ? parent.path + name + "/" : name
-
-        reading = false
-        line_count = 0
-
-        debugger
-
-        @data.each do |line|
-            # puts line if @debug
-            breakpoint = false
-            if line == "$ cd "+name
-                reading = true
-                line_count += 1
-                next
-            end
-
-            if reading
-                if line[0] == "d"
-                    @directory_names.push(line.split(" ")[1..-1].join(" "))
-                
-                elsif "0123456789".include?(line[0])
-                    parts = line.split(" ")
-                    size = parts[0].to_i
-                    name = parts[1..-1].join(" ")
-                    @file_names[name] = size
-                    @size += size
-                    @total_size += size
-
-                elsif line[0..3] == "$ cd" && line != "$ cd .."
-                    breakpoint = true
-                end
-            end
-
-            break if breakpoint
-            line_count += 1
-        end
 
 
-        @directory_names.each do |dir|
-            @directory_nodes[dir] = DirNode.new(dir, data, depth + 1, self, debug)
-        end
+directory = Hash.new(Hash.new())
 
-        @directory_nodes.each do |k, v|
-            @total_size += v.total_size
-        end
+head = directory['Root']
+head['parent'] = false
+head['path'] = ''
+head['has_child'] = true
+head['children'] = []
 
-        if @debug && @total_size <= 100000
-            print "#{@path} "
-            print "#{@total_size} "
-            print "\n"
-            puts
-        end
 
-        def find_by_size(size = 100000)
-            holder = []
-
-            if @total_size <= size
-                holder.push(@total_size)
-            end
-
-            @directory_nodes.each do |k, v|
-                holder += v.find_by_size()
-            end
-
-            return holder
-        end
-
+file_data.each do |line|
+    if line[0..3] == "$ cd" && line != "$ cd .."
+        parent = head
+        parent['has_child'] = true
+        head[line[5..-1]] = Hash.new(Hash.new())
+        head = head[line[5..-1]]
+        parent['children'] += [head]
+        head['name'] = line[5..-1]
+        head['parent'] = parent
+        head['path'] = parent['path'] + head['name'] +"/"
+        # puts head['path']
+        head['size'] = 0
+        head['has_child'] = false
+        head['children'] = []
+    
+    elsif line == "$ cd .."
+        size = head['size']
+        head = head['parent']
+        head['size'] += size
+        # puts head['size']
+    elsif line == "$ ls"
+        next
+    elsif "0123456789".include?(line[0])
+        parts = line.split(" ")
+        size = parts[0].to_i
+        name = parts[1]
+        head['files'][name] = size
+        head['size'] += size
     end
-
 end
 
-root = DirNode.new("/", file_data, 0, nil, true)
+while head['parent']['parent']
+    head = head['parent']
+end
 
-puts root.find_by_size().sum()
+def find_by_size(head, size = 100000)
+    holder = []
+    if head['size'] <= size
+        holder.push(head['size'])
+    end
 
+    if head['has_child']
+        for child in head['children'] do
+            holder += find_by_size(child)
+        end
+    end
+    return holder
+end
 
+puts find_by_size(head)

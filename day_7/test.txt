@@ -1,0 +1,51 @@
+$ cd /
+$ ls
+100 a
+100 b
+dir c
+dir g
+$ cd c
+$ ls
+dir d
+dir a
+$ cd d
+$ ls
+100 e
+100 f
+$ cd ..
+$ cd a
+$ ls
+100 t
+100 u
+100 v
+$ cd ..
+$ cd ..
+$ cd g
+$ ls
+100 h
+100 i
+100 j
+dir a
+dir k
+$ cd a
+100 w
+100 x
+100 y
+100 z
+$ cd ..
+$ cd k
+$ ls
+100 l
+100 m
+dir n
+$ cd n
+$ ls
+100 o
+100 p
+dir q
+$ cd q
+$ ls
+dir r
+$ cd r
+$ ls
+100 s
