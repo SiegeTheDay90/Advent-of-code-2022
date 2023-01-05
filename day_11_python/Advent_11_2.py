@@ -24,10 +24,12 @@ class Monkey:
         self.debug = debug
 
     def throw(self):
-        for item_id in self.items.keys():
+
+        for item_id in self.items.keys(): # Perform an operation on, test, and throw each item
+
             for prime in self.primes:
                 self.items[item_id][prime] = self.operation(self.items[item_id][prime])%prime
-            self.inspected += 1
+            self.inspected += 1 # Increment the number of items this monkey has inspected (Monkey Business)
 
             if(self.items[item_id][self.divisor] == 0):
                 monkeys[self.true_target].items[item_id] = self.items[item_id]
@@ -35,9 +37,8 @@ class Monkey:
             else:
                 monkeys[self.false_target].items[item_id] = self.items[item_id]
                 if self.debug: print("Monkey ", self.number," passes to ",self.false_target)
-        # print()
         
-        self.items = dict()
+        self.items = dict() # All Items have been thrown away
 
 
 
