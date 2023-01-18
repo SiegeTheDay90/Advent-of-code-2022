@@ -1,40 +1,8 @@
 import pdb
 from time import time
-from collections import deque
-from os import system
+from build_span import build_span
 
 
-def build_span(spans):
-
-    empty_indices = deque()
-    # print(spans)
-
-    for index, span in enumerate(spans):
-        if len(span) == 0:
-            empty_indices.appendleft(index)
-
-    for index in empty_indices:
-        spans.pop(index)
-
-    spans = sorted(spans, key=lambda x: x[0], reverse=False)
-
-    combined = []
-
-    combined.append(spans.pop(0))
-    # pdb.set_trace()
-    for index, span in enumerate(spans):
-
-        if combined[-1][-1]+1 >= spans[index][0]:
-            if spans[index][-1] > combined[-1][-1]:
-                combined[-1] = range(combined[-1][0], spans[index][-1]+2)
-            else:
-                continue
-        else:
-            combined.append(spans[index])
-            
-
-    
-    return combined
 
 
 with open ("data.txt", "r") as myfile:
@@ -110,16 +78,12 @@ parsed_data = parse_data(data)
 final = []
 
 for y in range(0, 4000001):
-    # system('clear')
     print("Building for y =", y)
-    # print("Final:", final)
     spans = []
     for sensor in parsed_data:
         spans.append(sensor.x_bound(y))
     
     combined = build_span(spans)
-    if y == 1235:
-        pdb.set_trace()
     if len(combined) >= 2:
         print(y, ":", combined)
         final.append(combined)
