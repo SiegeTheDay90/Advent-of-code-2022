@@ -1,6 +1,42 @@
-from multiprocessing import Pool
+import pdb
 from time import time
-start = time()
+from collections import deque
+from os import system
+
+
+def build_span(spans):
+
+    empty_indices = deque()
+    # print(spans)
+
+    for index, span in enumerate(spans):
+        if len(span) == 0:
+            empty_indices.appendleft(index)
+
+    for index in empty_indices:
+        spans.pop(index)
+
+    spans = sorted(spans, key=lambda x: x[0], reverse=False)
+
+    combined = []
+
+    combined.append(spans.pop(0))
+    # pdb.set_trace()
+    for index, span in enumerate(spans):
+
+        if combined[-1][-1]+1 >= spans[index][0]:
+            if spans[index][-1] > combined[-1][-1]:
+                combined[-1] = range(combined[-1][0], spans[index][-1]+2)
+            else:
+                continue
+        else:
+            combined.append(spans[index])
+            
+
+    
+    return combined
+
+
 with open ("data.txt", "r") as myfile:
 # with open ("dummy.txt", "r") as myfile:
     data = myfile.read().splitlines()
@@ -23,19 +59,22 @@ def parse_data(data: list) -> list:
 
     return holder
 
+def manhattan_distance(sensor_pos, beacon_pos):
+    return abs(sensor_pos[0]-beacon_pos[0]) + abs(sensor_pos[1]-beacon_pos[1])
+
 class Sensor:
     sensors = []
     beacon_positions= set()
     boundary = [float('inf'), float('-inf'), float('inf'), float('-inf')] #Left, Right, Up, Down
-    count = 0
 
+    count = 0
     def __init__(self, pos, beacon):
         Sensor.count += 1
         self.pos = pos
         Sensor.beacon_positions.add(beacon)
         self.beacon = beacon
         self.distance = manhattan_distance(pos, beacon)
-        self.id = Sensor.count
+        self.id = Sensor.count + 0
         print(self)
 
         if self.pos[0] - self.distance < Sensor.boundary[0]:
@@ -51,59 +90,40 @@ class Sensor:
             Sensor.boundary[3] = self.pos[1] + self.distance
         Sensor.sensors.append(self)
 
+
     def in_range(self, pos):
         return manhattan_distance(self.pos, pos) <= self.distance
 
     def __str__(self):
         return "Sensor #"+str(self.id)
 
-
-    def scanline(y):
-        count = 0
-        for x in range (0, 4000001):
-            flag = False
-            if (x, y) in Sensor.beacon_positions:
-                continue
-            for sensor in Sensor.sensors:
-                if sensor.in_range((x, y)) and not flag:
-                    flag = True
-                    count += 1
-            if not flag:
-                print(x, y)
-                print(time() - start)
-                pass
-        return False
+    def x_bound(self, y):
+        y_dist = abs(self.pos[1] - y)
+        return range(
+            self.pos[0]-(self.distance-y_dist),
+            self.pos[0]+(self.distance-y_dist)
+        )
 
 
-def manhattan_distance(sensor_pos, beacon_pos):
-    return abs(sensor_pos[0]-beacon_pos[0]) + abs(sensor_pos[1]-beacon_pos[1])
-
-
-
+start = time()
 parsed_data = parse_data(data)
+final = []
 
-def pool_handler():
-    p = Pool(4)
-    lines = range(0, 4000001)
-    p.map(Sensor.scanline, lines)
-
-if __name__ == '__main__':
-    pool_handler()
-
-
-# sensor = Sensor((0, 11), (2, 10))
-# print(Sensor.scanned_positions)
-# print(Sensor.scanline(10))
-
-# threads = dict()
-# for i in range(0, 100):
-#     threads[i] = multiprocessing.Process(target=Sensor.scanline, args=(i,))
-#     threads[i].start()
-
-# for i in threads: 
-#     threads[i].join()
-# if __name__ == '__main__':
-#     for i in range(0, 1000):
-#         Sensor.scanline(i)
-
+for y in range(0, 4000001):
+    # system('clear')
+    print("Building for y =", y)
+    # print("Final:", final)
+    spans = []
+    for sensor in parsed_data:
+        spans.append(sensor.x_bound(y))
+    
+    combined = build_span(spans)
+    if y == 1235:
+        pdb.set_trace()
+    if len(combined) >= 2:
+        print(y, ":", combined)
+        final.append(combined)
+        pdb.set_trace()
+print("")
+print(time()-start)
 
