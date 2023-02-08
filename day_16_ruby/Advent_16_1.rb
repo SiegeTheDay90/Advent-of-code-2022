@@ -35,6 +35,11 @@ class PipeGraph
         @head = @@pipes[head]
     end
 
+    def open()
+        @head.open!() unless @head.open?
+    end
+
+
     def self.step()
         @@time_remaining -= 1
         @@pipes.each {|pipe| pipe.step()}
@@ -42,7 +47,7 @@ class PipeGraph
 end
 
 class Pipe < PipeGraph
-    attr_reader :open, :name, :outs, :released
+    attr_reader :open, :name, :outs, :released, :rate
     def initialize(name, rate)
         @name = name
         @rate = rate
@@ -52,17 +57,61 @@ class Pipe < PipeGraph
         @@pipes[name] = self
     end
 
+    def open?
+        @open
+    end
+
+    def distance(target_node)
+        on_deck = Set.new([self])
+        visited = Set.new
+        counter = 0
+        running = true
+
+        if target_node == self
+            return 0
+        end
+
+        while running
+            holder = []
+            counter += 1
+            for node in on_deck
+                visited.add(node)
+                on_deck.delete(node)
+                for child in node.outs
+                    if !visited.include?(child)
+                        if child == target_node
+                            running = false;
+                        end
+                        holder.push(child)
+                    end
+                end
+            end
+            for child in holder
+                on_deck.add(child)
+            end
+        end
+        puts "Found #{target_node.name} in #{counter} steps."
+        return counter
+    end
+
+    def value(target_node)
+        if target_node.open?
+            return 0
+        else
+            return (@@time_remaining - self.distance(target_node)-1) * target_node.rate
+        end
+    end
+
     def step()
         if @open
             @released += @rate
             @@total_released += @rate
-            @value = @@time_remaining * @rate
         end
     end
 
-    def value(time_remaining = @@time_remaining)
-        return time_remaining * @rate
-    end
+    # def value(target_node)
+    #     return time_remaining * @rate
+    # end
 
     def open!()
         @open = true
