@@ -1,4 +1,5 @@
 require "byebug"
+require "set"
 class PipeGraph
     attr_accessor :head, :total_released, :total_rate, :time_remaining, :order, :pipes, :name, :order
     
@@ -43,7 +44,6 @@ class PipeGraph
 
     def run
         while @pipes.any?{|key, pipe| !pipe.open? && pipe.rate > 0} && @time_remaining > 0
-            debugger if @time_remaining < 10
             target = @pipes[self.choose_target()]
 
             if target
@@ -55,6 +55,10 @@ class PipeGraph
                 self.step()
             end
         end
+
+        while @time_remaining > 0
+            self.step()
+        end
         self.report()
     end
 
@@ -65,6 +69,8 @@ class PipeGraph
         @pipes.each_value do |pipe|
             holder[pipe.name] = self.delta(pipe) unless @head == pipe || pipe.rate < 1 || pipe.open? || @head.distance(pipe)+1 > @time_remaining
         end
+
+        
 
         values = holder.values.sort
         running = true
@@ -105,13 +111,19 @@ class PipeGraph
 
         delta = total - new_total
 
-        self_value = remaining * target_node.rate
-
-        if self_value - delta < 0
-            return Float::INFINITY
+        if !@head.open?
+            self_value = remaining * target_node.rate
         else
-            return delta
+            self_value = 0
         end
+
+        return delta - self_value
+
+        # if self_value - delta < 0
+        #     return Float::INFINITY
+        # else
+        #     return delta
+        # end
 
     end
 
@@ -235,3 +247,13 @@ class Pipe < PipeGraph
 
 end
 
+puts
+puts "TEST"
+a = PipeGraph.new("dummy.txt", "AA")
+a.run
+puts
+
+puts "PUZZLE"
+a = PipeGraph.new("data.txt", "NQ")
+a.run
+puts
