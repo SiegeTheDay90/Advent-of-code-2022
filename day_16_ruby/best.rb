@@ -50,7 +50,7 @@ class PipeGraph
                 @head.distance(target).times do
                     self.step(target.name)
                 end
-                self.open(true)
+                self.open()
             else
                 self.step()
             end
@@ -145,11 +145,10 @@ class PipeGraph
         puts "Total of #{target_node.name}: #{values.sum}"
     end
 
-    def open(loud = false)
+    def open()
         unless @head.open? || @time_remaining < 1
             self.step()
             @head.open!()
-            puts "#{@head.name} open" if loud
             @order << "Open #{@head.name}"
         end
     end
@@ -255,6 +254,6 @@ a.run
 puts
 
 puts "PUZZLE"
-a = PipeGraph.new("data.txt", "NQ")
+a = PipeGraph.new("data.txt", "AA")
 a.run
 puts

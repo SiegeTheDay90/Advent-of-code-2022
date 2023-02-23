@@ -255,6 +255,6 @@ a.run
 puts
 
 puts "PUZZLE"
-a = PipeGraph.new("data.txt", "NQ")
+a = PipeGraph.new("data.txt", "AA")
 a.run
 puts
