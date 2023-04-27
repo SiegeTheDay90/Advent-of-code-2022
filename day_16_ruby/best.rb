@@ -44,7 +44,7 @@ class PipeGraph
 
     def run
         while @pipes.any?{|key, pipe| !pipe.open? && pipe.rate > 0} && @time_remaining > 0
-            target = @pipes[self.choose_target()]
+            target = @pipes[self.choose_target2()]
 
             if target
                 @head.distance(target).times do
@@ -62,12 +62,49 @@ class PipeGraph
         self.report()
     end
 
+    def choose_target2
+        candidates = []
+
+        @pipes.to_a.each do |name, pipe|
+            if pipe.rate == 0 || pipe.open? || @head.distance(pipe)+2 > @time_remaining
+                next
+            end
+
+            candidates.push([@head.value(pipe), pipe])
+        end
+        candidates.sort_by!{|ele| -ele[0]}
+        
+        running = true
+
+        while running
+            running = false
+
+            candidate = candidates.shift
+            return nil unless candidate
+            distance = @head.distance(candidate[1])
+            time_elapsed = distance + 1
+
+            candidates.each do |value, pipe|
+                hypothetical_value = candidate[1].value(pipe, false, @time_remaining - time_elapsed)
+                hypothetical_loss = value - hypothetical_value
+
+                alternative_candidate_value = pipe.value(candidate[1], false, @time_remaining - @head.distance(pipe) - 1)
+                alternative_candidate_loss = candidate[0] - alternative_candidate_value
+
+                if alternative_candidate_loss < hypothetical_loss
+                    running = true
+                end
+            end
+        end
+        return candidate[1].name
+    end
+
     def choose_target
 
 
         holder = {}
         @pipes.each_value do |pipe|
-            holder[pipe.name] = self.delta(pipe) unless @head == pipe || pipe.rate < 1 || pipe.open? || @head.distance(pipe)+1 > @time_remaining
+            holder[pipe.name] = self.delta(pipe) unless @head == pipe || pipe.open? #|| @head.distance(pipe)+1 > @time_remaining
         end
 
         
@@ -87,6 +124,7 @@ class PipeGraph
                 end
             end
         end
+        # debugger
         return candidate.name
     end
     
@@ -112,6 +150,7 @@ class PipeGraph
         delta = total - new_total
 
         if !@head.open?
+            debugger
             self_value = remaining * target_node.rate
         else
             self_value = 0
@@ -254,6 +293,6 @@ a.run
 puts
 
 puts "PUZZLE"
-a = PipeGraph.new("data.txt", "AA")
+a = PipeGraph.new("data.txt", "NQ")
 a.run
 puts

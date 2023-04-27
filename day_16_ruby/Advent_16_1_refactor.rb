@@ -62,7 +62,7 @@ class PipeGraph
             self.step(target.name)
             visited << @head
 
-            next_target = @pipes[self.choose_target]
+            next_target = @pipes[self.choose_target(visited)]
 
             if next_target.rate >= (distance(next_target)*2+1)*@head.rate
                 next
@@ -125,7 +125,7 @@ class PipeGraph
             end
             @potential += value(pipe)
         end
-        @potential
+        @potential + @earned
     end
 
     def report
@@ -230,6 +230,7 @@ class PipeGraph
         #     temp.step(pipe.name)
         #     temp.open!
         #     holder[pipe.name] = self.potential! - temp.potential!
+        #     # debugger
         # end
 
         @pipes.each_value do |pipe|
@@ -240,7 +241,6 @@ class PipeGraph
         end
 
         holder = holder.to_a.sort_by{|key, value| value}
-        debugger
         result = holder[-1][0]
         # debugger if result == "EE"
         # debugger
@@ -267,13 +267,12 @@ class PipeGraph
                 step_to_candidate[other_pipe.name] -= value(time_after_elapse, candidate, other_pipe)
             end
             
-            # debugger
-
-
+            
+            
             #How much value does candidate have?
-
+            
             candidate_value = value(candidate)
-
+            
             #step to every other node
             bad_candidate = false
             for other_pipe in @pipes.values.reject{|pipe| pipe == @head || pipe == candidate || pipe.open?}
@@ -288,10 +287,11 @@ class PipeGraph
                     break
                 end
             end
-
+            
             if bad_candidate
                 next
             else
+                debugger
                 return candidate
             end
         end
@@ -337,6 +337,6 @@ a.run
 puts
 
 puts "PUZZLE"
-a = PipeGraph.new("data.txt", "AA")
+a = PipeGraph.new("data.txt", "NQ")
 a.run
 puts
