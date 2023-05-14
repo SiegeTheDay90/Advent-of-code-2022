@@ -78,6 +78,7 @@ class Solution:
 
 
         if (current, time_left, open) in self.dp:
+            print("repeat", (current, time_left, open))
             return self.dp[(current, time_left, open)]
 
         if time_left <= 0:
@@ -93,8 +94,6 @@ class Solution:
             return self.dp[(current, time_left, open)]
         
         if len(open_set) == len(self.value_nodes):
-            if current == "CC":
-                pdb.set_trace()
             return sum([self.nodes[node]*time_left for node in open_set])
         
 
@@ -116,10 +115,10 @@ class Solution:
             # if current == 'HH' and node == 'EE' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH']:
             #     pdb.set_trace()
 
-            if current == 'EE' and node == 'CC' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH'] | self.bitmask['EE']:
-                pdb.set_trace()
+            # if current == 'EE' and node == 'CC' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH'] | self.bitmask['EE']:
+            #     pdb.set_trace()
             
-            if self.edges[current][node] > time_left+2:
+            if self.edges[current][node] > time_left:
                 continue
 
             copy = open | self.bitmask[node]
@@ -127,7 +126,7 @@ class Solution:
             copy_set.add(node)
 
             total = sum([self.nodes[x]*(self.edges[current][node]+1) for x in open_set])
-
+            
             holder = (
                 total + self.solve(
                     node, 
@@ -152,11 +151,11 @@ class Solution:
        
 
 
-test = Solution(dummy)
+# test = Solution(dummy)
 
-# real = Solution(data)
+real = Solution(data)
 
 # print(s.nodes)
 # print(s.edges)
-print(test.solve("AA"))
-# print(real.solve("AA"))
+# print(test.solve("AA"))
+print(real.solve("AA"))
