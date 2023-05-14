@@ -11,12 +11,14 @@ class Solution:
     def __init__(self, data):
         self.nodes = dict()
         self.value_nodes = set()
+        self.bitmask = dict()
         self.edges = self.parse_data(data)
         self.dp = dict()
         self.max = 0
 
     def parse_data(self, data: list) -> dict:
-        raw_edges = defaultdict(lambda: dict())
+        bit = 0
+        raw_edges = defaultdict(dict)
         for line in data:
             words = line.split(" ")
             name = words[1]
@@ -24,30 +26,34 @@ class Solution:
             self.nodes[name] = rate
             if rate > 0:
                 self.value_nodes.add(name)
+                self.bitmask[name] = 2**bit
+                bit += 1
             raw_outs = words[9:]
             for out in raw_outs:
                 raw_edges[name][out.replace(',', '')] = 1
 
-        compressed_edges = defaultdict(lambda: dict())
+        compressed_edges = defaultdict(dict)
+        
 
         for node in self.nodes:
-            others = filter(lambda x: x != node, self.nodes.keys())
 
-            for other_node in others:
+            for other_node in self.nodes:
                 if self.nodes[other_node] > 0:
                     compressed_edges[node][other_node] = self.distance(
                         node,
                         other_node,
                         raw_edges
                     )
+        
             
         return compressed_edges
     
     def distance(self, src, dst, edges):
+        if src == dst:
+            return 0
         counter = 0
         onDeck = list(edges[src])
         closed = set()
-        # pdb.set_trace()
 
         while onDeck:
             counter += 1
@@ -64,33 +70,93 @@ class Solution:
             onDeck = holder
         return -1
     
-    def solve(self, current = "AA", order = (), time_left = 31, value = 0):
-        if len(order) == len(self.value_nodes):
-            return value + self.nodes[current] * (time_left - 1)
-        
-        order += tuple([current])
-        most = 0
-        self.dp[order] = value + self.nodes[current] * (time_left - 1)
-        
-        for node in self.value_nodes - set(order):
-            memo = self.solve(
-                node, 
-                order, 
-                time_left - self.edges[current][node] - 1, 
-                self.dp[order]
-            )
-            if memo > most:
-                most = memo
+    
+    
+    def solve(self, current = "AA", time_left = 30, open=0, open_set = set()):
 
-        return most
+
+
+
+        if (current, time_left, open) in self.dp:
+            return self.dp[(current, time_left, open)]
+
+        if time_left <= 0:
+            self.dp[(current, time_left, open)] = 0
+            return 0
+        
+        if time_left == 1:
+            self.dp[(current, time_left, open)] = 0
+
+            for node in open_set:
+                self.dp[(current, time_left, open)] += self.nodes[node]
+
+            return self.dp[(current, time_left, open)]
+        
+        if len(open_set) == len(self.value_nodes):
+            if current == "CC":
+                pdb.set_trace()
+            return sum([self.nodes[node]*time_left for node in open_set])
+        
+
+
+        self.dp[(current, time_left, open)] = 0
+
+        for node in (self.value_nodes - open_set):
+            
+            # if current == 'DD' and node == 'BB' and open == self.bitmask['DD']:
+            #     one = True
+            #     pdb.set_trace()
+
+            # if current == 'BB' and node == 'JJ' and open == self.bitmask['DD'] | self.bitmask['BB']:
+            #     pdb.set_trace()
+
+            # if current == 'JJ' and node == 'HH' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ']:
+            #     pdb.set_trace()
+
+            # if current == 'HH' and node == 'EE' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH']:
+            #     pdb.set_trace()
+
+            if current == 'EE' and node == 'CC' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH'] | self.bitmask['EE']:
+                pdb.set_trace()
+            
+            if self.edges[current][node] > time_left+2:
+                continue
+
+            copy = open | self.bitmask[node]
+            copy_set = open_set.copy()
+            copy_set.add(node)
+
+            total = sum([self.nodes[x]*(self.edges[current][node]+1) for x in open_set])
+
+            holder = (
+                total + self.solve(
+                    node, 
+                    time_left - self.edges[current][node]-1, 
+                    copy, 
+                    copy_set
+                    )
+                )
+
+            if holder > self.dp[(current, time_left, open)]:
+                self.dp[(current, time_left, open)] = holder
+
+        if self.dp[(current, time_left, open)] == 0:
+            for node in open_set:
+                self.dp[(current, time_left, open)] += self.nodes[node] * time_left
+
+
+        return self.dp[(current, time_left, open)]
+
+
+            
        
 
 
 test = Solution(dummy)
 
-real = Solution(data)
+# real = Solution(data)
 
 # print(s.nodes)
 # print(s.edges)
-print(test.solve())
-# print(real.solve())
+print(test.solve("AA"))
+# print(real.solve("AA"))
