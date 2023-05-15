@@ -159,10 +159,6 @@ class PipeGraph
     end
 
     def step(next_node_name = nil)
-        if @time_remaining < 1
-            puts "Time Over"
-            return
-        end
         @time_remaining -= 1
         @pipes.each_value {|pipe| pipe.step()}
         if next_node_name

@@ -1,5 +1,4 @@
 from collections import defaultdict
-import pdb
 
 with open ("dummy.txt", "r") as myfile:
     dummy = myfile.read().splitlines()
@@ -11,10 +10,8 @@ class Solution:
     def __init__(self, data):
         self.nodes = dict()
         self.value_nodes = set()
-        self.bitmask = dict()
         self.edges = self.parse_data(data)
         self.dp = dict()
-        self.max = 0
 
     def parse_data(self, data: list) -> dict:
         bit = 0
@@ -26,7 +23,6 @@ class Solution:
             self.nodes[name] = rate
             if rate > 0:
                 self.value_nodes.add(name)
-                self.bitmask[name] = 2**bit
                 bit += 1
             raw_outs = words[9:]
             for out in raw_outs:
@@ -72,79 +68,35 @@ class Solution:
     
     
     
-    def solve(self, current = "AA", time_left = 30, open=0, open_set = set()):
-
-
-
-
-        if (current, time_left, open) in self.dp:
-            # print("repeat", (current, time_left, open))
-            return self.dp[(current, time_left, open)]
-
-        if time_left <= 0:
-            return 0
+    def solve(self, current = "AA", time_left = 30, open_set = set()):
+    
         
-        if time_left == 1:
-            self.dp[(current, time_left, open)] = 0
-
-            for node in open_set:
-                self.dp[(current, time_left, open)] += self.nodes[node]
-
-            return self.dp[(current, time_left, open)]
-        
-        if len(open_set) == len(self.value_nodes):
-            return sum([self.nodes[node]*time_left for node in open_set])
-        
-
-
-        self.dp[(current, time_left, open)] = 0
+        maximum = 0
 
         for node in (self.value_nodes - open_set):
-            
-            # if current == 'DD' and node == 'BB' and open == self.bitmask['DD']:
-            #     one = True
-            #     pdb.set_trace()
-
-            # if current == 'BB' and node == 'JJ' and open == self.bitmask['DD'] | self.bitmask['BB']:
-            #     pdb.set_trace()
-
-            # if current == 'JJ' and node == 'HH' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ']:
-            #     pdb.set_trace()
-
-            # if current == 'HH' and node == 'EE' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH']:
-            #     pdb.set_trace()
-
-            # if current == 'EE' and node == 'CC' and open == self.bitmask['DD'] | self.bitmask['BB'] | self.bitmask['JJ'] | self.bitmask['HH'] | self.bitmask['EE']:
-            #     pdb.set_trace()
             
             if self.edges[current][node] >= time_left:
                 continue
 
-            copy = open | self.bitmask[node]
             copy_set = open_set.copy()
             copy_set.add(node)
 
             total = sum([self.nodes[x]*(self.edges[current][node]+1) for x in open_set])
-            if time_left - self.edges[current][node]-1 < 0:
-                pdb.set_trace()
-            holder = (
+            current_total = (
                 total + self.solve(
                     node, 
                     time_left - self.edges[current][node]-1, 
-                    copy, 
                     copy_set
                     )
                 )
 
-            if holder > self.dp[(current, time_left, open)]:
-                self.dp[(current, time_left, open)] = holder
+            if current_total > maximum:
+                maximum = current_total
 
-        if self.dp[(current, time_left, open)] == 0:
-            for node in open_set:
-                self.dp[(current, time_left, open)] += self.nodes[node] * time_left
-
-
-        return self.dp[(current, time_left, open)]
+        return max([
+            maximum, 
+            sum([self.nodes[node]*time_left for node in open_set])
+        ])
 
 
             
@@ -158,4 +110,4 @@ real = Solution(data)
 # print(s.nodes)
 # print(s.edges)
 print(test.solve("AA"))
-print(real.solve("AA"))
+print(real.solve("NQ"))
